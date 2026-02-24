@@ -40,3 +40,5 @@ Thumbs.db
 
 # Optional: dotenv backups
 .env.backup
+
+/src/generated/prisma
