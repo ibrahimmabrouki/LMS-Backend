@@ -6,3 +6,196 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model assignments {
+  id          String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  course_id   String?       @db.Uuid
+  title       String        @db.VarChar
+  description String?
+  type        String?       @db.VarChar
+  due_date    DateTime?     @db.Timestamp(6)
+  max_score   Int?
+  created_at  DateTime?     @default(now()) @db.Timestamp(6)
+  courses     courses?      @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  submissions submissions[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model attendance_records {
+  session_id          String              @db.Uuid
+  student_id          String              @db.Uuid
+  status              String?             @db.VarChar
+  attendance_sessions attendance_sessions @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users               users               @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([session_id, student_id])
+}
+
+model attendance_sessions {
+  id                 String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  course_id          String?              @db.Uuid
+  session_date       DateTime             @db.Date
+  attendance_records attendance_records[]
+  courses            courses?             @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model chat_messages {
+  id            String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  session_id    String?        @db.Uuid
+  sender_type   String?        @db.VarChar
+  message       String?
+  created_at    DateTime?      @default(now()) @db.Timestamp(6)
+  chat_sessions chat_sessions? @relation(fields: [session_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model chat_sessions {
+  id            String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       String?         @db.Uuid
+  created_at    DateTime?       @default(now()) @db.Timestamp(6)
+  chat_messages chat_messages[]
+  users         users?          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model cohorts {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name       String    @db.VarChar
+  start_date DateTime? @db.Date
+  end_date   DateTime? @db.Date
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  courses    courses[]
+}
+
+model course_content {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  course_id    String?   @db.Uuid
+  title        String    @db.VarChar
+  content_type String?   @db.VarChar
+  content_url  String?
+  position     Int?
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  courses      courses?  @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model courses {
+  id                  String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  cohort_id           String?               @db.Uuid
+  instructor_id       String?               @db.Uuid
+  title               String                @db.VarChar
+  description         String?
+  deleted_at          DateTime?             @db.Timestamp(6)
+  created_at          DateTime?             @default(now()) @db.Timestamp(6)
+  assignments         assignments[]
+  attendance_sessions attendance_sessions[]
+  course_content      course_content[]
+  cohorts             cohorts?              @relation(fields: [cohort_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users               users?                @relation(fields: [instructor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  enrollments         enrollments[]
+}
+
+model enrollments {
+  user_id     String    @db.Uuid
+  course_id   String    @db.Uuid
+  enrolled_at DateTime? @default(now()) @db.Timestamp(6)
+  courses     courses   @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users       users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([user_id, course_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model feedback {
+  id            String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  submission_id String?      @db.Uuid
+  instructor_id String?      @db.Uuid
+  rating        Int?
+  comment       String?
+  is_locked     Boolean?     @default(false)
+  locked_at     DateTime?    @db.Timestamp(6)
+  created_at    DateTime?    @default(now()) @db.Timestamp(6)
+  users         users?       @relation(fields: [instructor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  submissions   submissions? @relation(fields: [submission_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model performance_summary {
+  user_id               String    @id @db.Uuid
+  overall_rating        Decimal?  @db.Decimal
+  attendance_percentage Decimal?  @db.Decimal
+  completed_assignments Int?      @default(0)
+  completed_projects    Int?      @default(0)
+  last_computed_at      DateTime? @db.Timestamp(6)
+  users                 users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model profiles {
+  id            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       String?   @unique @db.Uuid
+  bio           String?
+  cv_url        String?
+  linkedin_url  String?
+  github_url    String?
+  portfolio_url String?
+  cv_completed  Boolean?  @default(false)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+  users         users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model skills {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique @db.VarChar
+  user_skills user_skills[]
+}
+
+model submissions {
+  id             String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  assignment_id  String?      @db.Uuid
+  student_id     String?      @db.Uuid
+  submission_url String?
+  submitted_at   DateTime?    @db.Timestamp(6)
+  score          Int?
+  graded_at      DateTime?    @db.Timestamp(6)
+  feedback       feedback[]
+  assignments    assignments? @relation(fields: [assignment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users          users?       @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user_skills {
+  user_id  String @db.Uuid
+  skill_id Int
+  skills   skills @relation(fields: [skill_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([user_id, skill_id])
+}
+
+model user_vectors {
+  user_id   String  @id @db.Uuid
+  embedding Float[]
+  users     users   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  username            String               @unique @db.VarChar
+  email               String               @unique @db.VarChar
+  password_hash       String
+  role                String               @db.VarChar
+  is_active           Boolean?             @default(true)
+  deleted_at          DateTime?            @db.Timestamp(6)
+  created_at          DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at          DateTime?            @default(now()) @db.Timestamp(6)
+  refresh_token       String?
+  attendance_records  attendance_records[]
+  chat_sessions       chat_sessions[]
+  courses             courses[]
+  enrollments         enrollments[]
+  feedback            feedback[]
+  performance_summary performance_summary?
+  profiles            profiles?
+  submissions         submissions[]
+  user_skills         user_skills[]
+  user_vectors        user_vectors?
+}
