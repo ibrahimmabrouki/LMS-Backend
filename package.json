@@ -1,20 +1,27 @@
 {
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1000.0",
+    "@aws-sdk/s3-request-presigner": "^3.1000.0",
     "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
     "@types/bcrypt": "^6.0.0",
     "@types/jsonwebtoken": "^9.0.10",
+    "axios": "^1.13.6",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.5",
+    "multer": "^2.1.0",
+    "pdf-parse-new": "^2.0.0",
     "pg": "^8.18.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/multer": "^2.0.0",
     "@types/node": "^25.3.0",
+    "@types/pdf-parse": "^1.1.5",
     "@types/pg": "^8.16.0",
     "nodemon": "^3.1.13",
     "prisma": "^7.4.1",
