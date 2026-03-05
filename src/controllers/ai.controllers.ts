@@ -5,6 +5,7 @@ import {
   searchCandidates,
   askAboutCandidates,
   upsertCandidateToAI,
+  deleteCandidateFromAI,
 } from "../services/ai.service";
 
 interface AuthRequest extends Request {
@@ -95,6 +96,23 @@ export const syncStudent = async (
     await upsertCandidateToAI(userId, profile.bio || "");
 
     return res.status(200).json({ message: "Student synced to AI successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+export const removeStudentFromAI = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await prisma.users.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    await deleteCandidateFromAI(userId);
+    return res.status(200).json({ message: "Student removed from AI index successfully" });
   } catch (err) {
     next(err);
   }

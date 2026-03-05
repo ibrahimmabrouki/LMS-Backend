@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { search, ask, syncStudent } from "../controllers/ai.controllers";
+import { search, ask, syncStudent, removeStudentFromAI } from "../controllers/ai.controllers";
 import { authenticateToken } from "../middlewares/auth.middleware";
 
 const aiRouter = Router();
@@ -12,5 +12,7 @@ aiRouter.post("/ask", authenticateToken, ask);
 
 // POST /ai/sync/:userId  — admin re-syncs a student after skills update
 aiRouter.post("/sync/:userId", authenticateToken, syncStudent);
+
+aiRouter.delete("/sync/:userId", authenticateToken, removeStudentFromAI);
 
 export default aiRouter;
