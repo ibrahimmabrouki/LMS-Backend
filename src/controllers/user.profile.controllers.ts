@@ -195,7 +195,7 @@ export const uploadCV = async (
       },
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "CV uploaded successfully",
       CVCompletionStatus: profile.cv_completed,
     });
