@@ -1,6 +1,7 @@
 import { Response, Request, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 import jwtUserPayload from "../utils/jwtUserPayload";
+import { extractTextFromPDF, upsertCandidateToAI } from "../services/ai.service";
 
 import {
   PutObjectCommand,
@@ -172,11 +173,12 @@ export const uploadCV = async (
 
     // uploading again simply overwrites the previous file in B2 — resubmission works automatically
     //simply no need to delete the old version
-    const cvKey = await helper_uploadCV(
-      userId,
-      req.file.buffer,
-      req.file.mimetype
-    );
+     // Extract text from PDF buffer BEFORE uploading to B2
+    // We have the buffer in RAM here — no need to download from B2 later
+    const cvText = await extractTextFromPDF(req.file.buffer);
+
+    // Upload to B2 — unchanged from original
+    const cvKey = await helper_uploadCV(userId, req.file.buffer, req.file.mimetype);
 
     const profile = await prisma.profiles.upsert({
       where: { user_id: userId },
@@ -193,9 +195,12 @@ export const uploadCV = async (
       },
     });
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "CV uploaded successfully",
       CVCompletionStatus: profile.cv_completed,
+    });
+    upsertCandidateToAI(userId, cvText).catch((err) => {
+      console.error(`[AI] Failed to sync student ${userId}:`, err.message);
     });
   } catch (err) {
     next(err);
