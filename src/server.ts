@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
-dotenv.config();
+import path from "path";
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 import { prisma } from "./lib/prisma";
 
 import app from "./app";
@@ -7,8 +8,8 @@ import connectDB from "./config/db";
 
 // connectDB();
 
-
-prisma.$connect()
+prisma
+  .$connect()
   .then(() => {
     console.log("✅ Database connected");
   })
@@ -18,7 +19,8 @@ prisma.$connect()
     process.exit(1);
   });
 
+const PORT = process.env.PORT ?? 3000;
 
-app.listen(process.env.PORT, () => {
-    console.log(`Server running on port ${process.env.PORT as string}`);
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

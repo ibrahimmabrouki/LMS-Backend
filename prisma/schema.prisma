@@ -73,6 +73,7 @@ model course_content {
   title        String    @db.VarChar
   content_type String?   @db.VarChar
   content_url  String?
+  text_body    String? // Full lesson text — used for AI/RAG ingest into Qdrant
   position     Int?
   created_at   DateTime? @default(now()) @db.Timestamp(6)
   courses      courses?  @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)

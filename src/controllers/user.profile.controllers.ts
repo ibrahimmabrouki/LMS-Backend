@@ -35,40 +35,16 @@ export const getStudentOwnProfileData = async (
 
     let profile = await prisma.profiles.findUnique({
       where: { user_id: userId },
-      select: {
-        bio: true,
-        full_name: true,
-        linkedin_url: true,
-        github_url: true,
-        portfolio_url: true,
-        cv_url: true,
-        cv_completed: true,
-        users: {
-          select: {
-            email: true,
-            username: true,
-          },
-        },
+      include: {
+        users: true,
       },
     });
 
     if (!profile) {
       profile = await prisma.profiles.create({
         data: { user_id: userId },
-        select: {
-          bio: true,
-          full_name: true,
-          linkedin_url: true,
-          github_url: true,
-          portfolio_url: true,
-          cv_url: true,
-          cv_completed: true,
-          users: {
-            select: {
-              email: true,
-              username: true,
-            },
-          },
+        include: {
+          users: true,
         },
       });
     }
@@ -76,7 +52,6 @@ export const getStudentOwnProfileData = async (
     return res.status(200).json({
       email: profile.users?.email,
       username: profile.users?.username,
-      full_name: profile.full_name,
       bio: profile.bio,
       linkedin_url: profile.linkedin_url,
       github_url: profile.github_url,
@@ -119,7 +94,7 @@ export const updateStudentProfile = async (
       updateData.bio = bio;
     }
     if (fullName !== undefined) {
-      updateData.full_name = fullName;
+      updateData.name = fullName;
     }
     if (linkedin_url !== undefined) {
       updateData.linkedin_url = linkedin_url;
@@ -333,34 +308,19 @@ export const getInstructorOwnProfileData = async (
 
     let profile = await prisma.profiles.findUnique({
       where: { user_id: userId },
-      select: {
-        full_name: true,
-        bio: true,
-        users: {
-          select: {
-            email: true,
-          },
-        },
-      },
+      include: { users: true },
     });
 
     // If profile doesn't exist → create one
     if (!profile) {
       profile = await prisma.profiles.create({
         data: { user_id: userId },
-        select: {
-          full_name: true,
-          bio: true,
-          users: {
-            select: { email: true },
-          },
-        },
+        include: { users: true },
       });
     }
 
     return res.status(200).json({
       email: profile.users?.email,
-      full_name: profile.full_name,
       bio: profile.bio,
     });
   } catch (err) {
@@ -400,7 +360,7 @@ export const updateInstructorProfile = async (
       updateData.bio = bio;
     }
     if (fullName !== undefined) {
-      updateData.full_name = fullName;
+      updateData.name = fullName;
     }
     /** 
     if (linkedin_url !== undefined) {
@@ -456,7 +416,7 @@ export const updateInstructorProfile = async (
 
 //     const studentProfile = await prisma.profiles.findUnique({
 //       where: { user_id: student.id },
-//       select: { full_name: true },
+//       select: { name: true },
 //     });
 
 //     if (!studentProfile) {
@@ -467,7 +427,7 @@ export const updateInstructorProfile = async (
 
 //     return res
 //       .status(200)
-//       .json({ full_name: studentProfile.full_name, email: email });
+//       .json({ name: studentProfile.name, email: email });
 //   } catch (err) {
 //     next(err);
 //   }
