@@ -60,7 +60,7 @@ model chat_sessions {
 
 model cohorts {
   id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name       String    @db.VarChar
+  name       String    @unique @db.VarChar
   start_date DateTime? @db.Date
   end_date   DateTime? @db.Date
   created_at DateTime? @default(now()) @db.Timestamp(6)
@@ -75,6 +75,7 @@ model course_content {
   content_url  String?
   position     Int?
   created_at   DateTime? @default(now()) @db.Timestamp(6)
+  text_body    String?
   courses      courses?  @relation(fields: [course_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -139,6 +140,7 @@ model profiles {
   cv_completed  Boolean?  @default(false)
   created_at    DateTime? @default(now()) @db.Timestamp(6)
   updated_at    DateTime? @default(now()) @db.Timestamp(6)
+  full_name     String?
   users         users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -156,6 +158,8 @@ model submissions {
   submitted_at   DateTime?    @db.Timestamp(6)
   score          Int?
   graded_at      DateTime?    @db.Timestamp(6)
+  status         String       @default("ungraded") @db.VarChar
+  created_at     DateTime?    @default(now()) @db.Timestamp(6)
   feedback       feedback[]
   assignments    assignments? @relation(fields: [assignment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users          users?       @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction)

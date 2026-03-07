@@ -8,15 +8,15 @@ import connectDB from "./config/db";
 // connectDB();
 
 
-prisma.$connect()
-  .then(() => {
-    console.log("✅ Database connected");
-  })
-  .catch((err) => {
-    console.error("❌ Database connection failed");
-    console.error(err);
-    process.exit(1);
-  });
+// prisma.$connect()
+//   .then(() => {
+//     console.log("✅ Database connected");
+//   })
+//   .catch((err) => {
+//     console.error("❌ Database connection failed");
+//     console.error(err);
+//     process.exit(1);
+//   });
 
 
 app.listen(process.env.PORT, () => {
