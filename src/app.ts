@@ -8,6 +8,8 @@ import {instructorAssignmentRouter, studentAssignmentRouter} from "./routes/assi
 import {instructorSubmissionRouter, studentSbmissionRouter} from "./routes/submission.routes";
 import {InstructorFeedbackRouter, StudentFeedbackRouter} from "./routes/feedback.routes";
 import errorHandler from "./middlewares/error.middleware";
+import aiRouter from "./routes/ai.routes";
+
 
 
 
@@ -41,6 +43,11 @@ app.use('/api/student/courses/submissions', studentSbmissionRouter);
 app.use('/api/instructor/feedback', InstructorFeedbackRouter);
 app.use('/api/student/feedback', StudentFeedbackRouter);
 
+app.use("/auth", authRouter);
+app.use('/skills', userSkillsRouter);
+app.use('/profile', StudentProfileRouter);
+app.use('/instuctor/profile', InstructorProfileRouter)
+app.use("/ai", aiRouter);
 
 app.use(errorHandler);
 
