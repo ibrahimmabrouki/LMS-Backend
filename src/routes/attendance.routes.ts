@@ -21,11 +21,11 @@ attendanceRouter.use(authenticateToken);
 // INSTRUCTOR ONLY routes
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Create a new attendance session for a course
+// moody this apis is for creating a new attendance session for a course
 // POST /attendance/sessions
 attendanceRouter.post("/sessions", authorizeRoles("instructor"), createSession);
 
-// Submit attendance records for a session (mark present/absent/late)
+// moody this apis is for submitting attendance records for a session (present/absent/late)
 // POST /attendance/sessions/:sessionId/records
 attendanceRouter.post(
   "/sessions/:sessionId/records",
@@ -33,7 +33,7 @@ attendanceRouter.post(
   submitAttendance,
 );
 
-// Get all sessions + records for a course (with summary per session)
+// moody this apis is for getting all attendance sessions and records for one course
 // GET /attendance/courses/:courseId/sessions
 attendanceRouter.get(
   "/courses/:courseId/sessions",
@@ -41,7 +41,7 @@ attendanceRouter.get(
   getCourseSessions,
 );
 
-// Get the roster (enrolled students) for a course
+// moody this apis is for getting the course roster before taking attendance
 // GET /attendance/courses/:courseId/roster
 attendanceRouter.get(
   "/courses/:courseId/roster",
@@ -49,7 +49,7 @@ attendanceRouter.get(
   getCourseRoster,
 );
 
-// Get full detail of one session
+// moody this apis is for getting full details of one attendance session
 // GET /attendance/sessions/:sessionId
 attendanceRouter.get(
   "/sessions/:sessionId",
@@ -61,7 +61,7 @@ attendanceRouter.get(
 // STUDENT ONLY routes
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Get own attendance across all enrolled courses
+// moody this apis is for the student to get their own attendance across all courses
 // GET /attendance/my
 attendanceRouter.get("/my", authorizeRoles("student"), getMyAttendance);
 
