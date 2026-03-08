@@ -11,7 +11,7 @@ interface AuthRequest extends Request {
 export const getAllCoursesForAI = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const courses = await prisma.courses.findMany({
@@ -36,7 +36,7 @@ export const getAllCoursesForAI = async (
 export const getCourseContentForAI = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const id = String(req.params.id);
@@ -54,7 +54,9 @@ export const getCourseContentForAI = async (
     });
 
     if (!course) {
-      return res.status(404).json({ success: false, message: "Course not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
     }
 
     const content = await prisma.course_content.findMany({
@@ -82,7 +84,7 @@ export const getCourseContentForAI = async (
 export const createCourseInstructor = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userPayload = req.user as jwtUserPayload;
@@ -150,7 +152,7 @@ export const createCourseInstructor = async (
 export const getAllCoursesByInstructor = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userPayload = req.user as jwtUserPayload;
@@ -196,7 +198,7 @@ export const getAllCoursesByInstructor = async (
 export const updateInstructorCourseById = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userPayload = req.user as jwtUserPayload;
@@ -256,7 +258,7 @@ export const updateInstructorCourseById = async (
 export const instructorGetCourseById = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userPayload = req.user as jwtUserPayload;
@@ -291,7 +293,7 @@ export const instructorGetCourseById = async (
 export const deleteCourseInstructor = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userPayload = req.user as jwtUserPayload;
@@ -374,7 +376,7 @@ export const deleteCourseInstructor = async (
 export const getAllEnrolledCourses = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userPayload = req.user as jwtUserPayload;
@@ -402,7 +404,6 @@ export const getAllEnrolledCourses = async (
     }
 
     return res.status(200).json({ Courses: courses });
-
   } catch (err) {
     return next(err); // also add return here
   }

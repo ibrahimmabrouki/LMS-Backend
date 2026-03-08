@@ -17,7 +17,7 @@ interface AuthRequest extends Request {
 export const search = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { query, top_k } = req.body;
@@ -37,11 +37,7 @@ export const search = async (
 
 // POST /ai/ask
 // Body: { question: string, top_k?: number }
-export const ask = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const ask = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { question, top_k } = req.body;
 
@@ -63,7 +59,7 @@ export const ask = async (
 export const syncStudent = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userId = req.params.userId as string;
@@ -95,12 +91,18 @@ export const syncStudent = async (
     // Re-sync using bio as CV text fallback
     await upsertCandidateToAI(userId, profile.bio || "");
 
-    return res.status(200).json({ message: "Student synced to AI successfully" });
+    return res
+      .status(200)
+      .json({ message: "Student synced to AI successfully" });
   } catch (err) {
     next(err);
   }
 };
-export const removeStudentFromAI = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const removeStudentFromAI = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const userId = req.params.userId as string;
 
@@ -112,7 +114,9 @@ export const removeStudentFromAI = async (req: AuthRequest, res: Response, next:
     if (!user) return res.status(404).json({ message: "User not found" });
 
     await deleteCandidateFromAI(userId);
-    return res.status(200).json({ message: "Student removed from AI index successfully" });
+    return res
+      .status(200)
+      .json({ message: "Student removed from AI index successfully" });
   } catch (err) {
     next(err);
   }
