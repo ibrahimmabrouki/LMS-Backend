@@ -7,6 +7,8 @@ import {
   deleteCourseInstructor,
   getAllCoursesForAI,
   getCourseContentForAI,
+  numberOfStudentsPerCourse,
+  countUngradedSubmissions,
   /*student =>*/ getAllEnrolledCourses,
 } from "../controllers/courses.controllers";
 
@@ -53,6 +55,18 @@ instructorCourseRouter.delete(
   authenticateToken,
   authorizeRoles("instructor"),
   deleteCourseInstructor,
+);
+instructorCourseRouter.get(
+  "/:courseId/num-students",
+  authenticateToken,
+  authorizeRoles("instructor"),
+  numberOfStudentsPerCourse,
+);
+instructorCourseRouter.get(
+  "/:courseId/pending-subs",
+  authenticateToken,
+  authorizeRoles("instructor"),
+  countUngradedSubmissions,
 );
 
 //routes for apis to Student to View Courses

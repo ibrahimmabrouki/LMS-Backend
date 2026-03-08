@@ -370,8 +370,77 @@ export const deleteCourseInstructor = async (
   }
 };
 
+// get number of students per course
+export const numberOfStudentsPerCourse = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userPayload = req.user as jwtUserPayload;
+
+    if (!userPayload) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    let { courseId } = req.params;
+    courseId = Array.isArray(courseId) ? courseId[0] : courseId;
+
+    if (!courseId) {
+      return res.status(400).json({ message: "Course ID is required" });
+    }
+
+    const countEnrollments = await prisma.enrollments.count({
+      where: { course_id: courseId },
+    });
+
+    return res.status(200).json({
+      courseId,
+      numberOfStudents: countEnrollments,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//number of Peding grades
+export const countUngradedSubmissions = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userPayload = req.user as jwtUserPayload;
+
+    if (!userPayload) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    let { courseId } = req.params;
+    courseId = Array.isArray(courseId) ? courseId[0] : courseId;
+
+    const ungradedCount = await prisma.submissions.count({
+      where: {
+        status: "ungraded",
+        assignments: {
+          course_id: courseId
+        }
+      }
+    });
+
+    return res.status(200).json({
+      courseId,
+      ungradedSubmissions: ungradedCount
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
 //Student APIs for the Courses
 //Get all enrolled Courses
+
 
 export const getAllEnrolledCourses = async (
   req: AuthRequest,
@@ -395,19 +464,37 @@ export const getAllEnrolledCourses = async (
 
     const courses = await prisma.enrollments.findMany({
       where: { user_id: userId },
+      include: {
+        courses: {
+          select: {
+            id: true,
+            title: true,
+            users: {
+              select: {
+                id: true,
+                profiles: {
+                  select: {
+                    full_name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!courses.length) {
       return res.status(404).json({
-        message: `Student ${fullName} is not enrolled in any course`,
+        message: `Student ${fullName} is not enrolled in any course`
       });
     }
-
     return res.status(200).json({ Courses: courses });
   } catch (err) {
-    return next(err); // also add return here
+    return next(err);
   }
 };
+
 /**export const deleteSkillByUser = async (
     req : AuthRequest,
     res : Response,

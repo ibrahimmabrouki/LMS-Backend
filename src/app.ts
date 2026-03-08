@@ -28,6 +28,7 @@ import {
 } from "./routes/feedback.routes";
 import attendanceRouter from "./routes/attendance.routes";
 import aiRouter from "./routes/ai.routes";
+import adminRouter from "./routes/admin.routes";
 import errorHandler from "./middlewares/error.middleware";
 
 const app = express();
@@ -36,7 +37,6 @@ app.use(express.json());
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRouter);
-app.use("/auth", authRouter);
 
 // ── Skills & Profile ──────────────────────────────────────────────────────────
 app.use("/api/skills", userSkillsRouter);
@@ -76,6 +76,9 @@ app.use("/courses", publicCourseRouter);
 // ── AI routes (search/ask/sync) ───────────────────────────────────────────────
 app.use("/api/ai", aiRouter);
 app.use("/ai", aiRouter);
+
+// ── Admin routes ──────────────────────────────────────────────────────────────
+app.use("/api/admin", adminRouter);
 
 app.use(errorHandler);
 
