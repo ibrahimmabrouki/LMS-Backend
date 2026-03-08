@@ -349,24 +349,38 @@ export const getInstructorOwnProfileData = async (
       },
     });
 
-    // If profile doesn't exist → create one
+    // Step 1 — create the profile if it does not exist
+    // just create it with minimal data, no select needed here
     if (!profile) {
-      profile = await prisma.profiles.create({
+      await prisma.profiles.create({
         data: { user_id: userId },
-        select: {
-          full_name: true,
-          bio: true,
-          users: {
-            select: { email: true },
-          },
-        },
       });
     }
 
+    // Step 2 — always fetch the full profile the same way
+    // this runs whether the profile already existed or was just created
+    // now the return type is always the same — no type mismatch
+    const fullProfile = await prisma.profiles.findUnique({
+      where: { user_id: userId },
+      include: {
+        users: {
+          select: {
+            email: true,
+            username: true,
+          },
+        },
+      },
+    });
+
+    if (!fullProfile) {
+      return res.status(500).json({ message: "Failed to load profile" });
+    }
+
     return res.status(200).json({
-      email: profile.users?.email,
-      full_name: profile.full_name,
-      bio: profile.bio,
+      email: fullProfile.users?.email,
+      username: fullProfile.users?.username,
+      full_name: fullProfile.full_name,
+      bio: fullProfile.bio,
     });
   } catch (err) {
     next(err);
