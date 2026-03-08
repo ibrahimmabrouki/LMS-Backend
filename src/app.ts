@@ -5,19 +5,77 @@ import {
   StudentProfileRouter,
   InstructorProfileRouter,
 } from "./routes/user.profile.router";
-import courseRouter from "./routes/course.routes";
+import {
+  instructorCourseRouter,
+  studentCourseRouter,
+  publicCourseRouter,
+} from "./routes/courses.routes";
+import {
+  instructorContentRouter,
+  studentContentRouter,
+} from "./routes/content.routes";
+import {
+  instructorAssignmentRouter,
+  studentAssignmentRouter,
+} from "./routes/assignment.routes";
+import {
+  instructorSubmissionRouter,
+  studentSbmissionRouter,
+} from "./routes/submission.routes";
+import {
+  InstructorFeedbackRouter,
+  StudentFeedbackRouter,
+} from "./routes/feedback.routes";
 import attendanceRouter from "./routes/attendance.routes";
+import aiRouter from "./routes/ai.routes";
 import errorHandler from "./middlewares/error.middleware";
 
 const app = express();
 
 app.use(express.json());
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+app.use("/api/auth", authRouter);
 app.use("/auth", authRouter);
+
+// ── Skills & Profile ──────────────────────────────────────────────────────────
+app.use("/api/skills", userSkillsRouter);
 app.use("/skills", userSkillsRouter);
+app.use("/api/profile", StudentProfileRouter);
+app.use("/api/instuctor/profile", InstructorProfileRouter);
 app.use("/profile", StudentProfileRouter);
 app.use("/instuctor/profile", InstructorProfileRouter);
-app.use("/courses", courseRouter); // Used by AI service to fetch course data
+
+// ── Courses (friend's instructor/student split routes) ────────────────────────
+app.use("/api/instructor/course", instructorCourseRouter);
+app.use("/api/student/course", studentCourseRouter);
+
+// ── Content (friend's routes — auto-ingest to Qdrant on add/edit/delete) ─────
+app.use("/api/instructor/courses/content", instructorContentRouter);
+app.use("/api/student/courses/content", studentContentRouter);
+
+// ── Assignments ───────────────────────────────────────────────────────────────
+app.use("/api/instructor/courses/assignment", instructorAssignmentRouter);
+app.use("/api/student/courses/assignment", studentAssignmentRouter);
+
+// ── Submissions ───────────────────────────────────────────────────────────────
+app.use("/api/instructor/courses/submissions", instructorSubmissionRouter);
+app.use("/api/student/courses/submissions", studentSbmissionRouter);
+
+// ── Feedback ──────────────────────────────────────────────────────────────────
+app.use("/api/instructor/feedback", InstructorFeedbackRouter);
+app.use("/api/student/feedback", StudentFeedbackRouter);
+
+// ── Attendance ────────────────────────────────────────────────────────────────
+app.use("/api/attendance", attendanceRouter);
 app.use("/attendance", attendanceRouter);
+
+// ── Courses (public AI ingest proxy — GET /courses and /courses/:id/content) ──
+app.use("/courses", publicCourseRouter);
+
+// ── AI routes (search/ask/sync) ───────────────────────────────────────────────
+app.use("/api/ai", aiRouter);
+app.use("/ai", aiRouter);
 
 app.use(errorHandler);
 
