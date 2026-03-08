@@ -6,6 +6,78 @@ interface AuthRequest extends Request {
   user?: jwtUserPayload;
 }
 
+// ── AI-facing read endpoints (public) ──────────────────────────────────────
+
+export const getAllCoursesForAI = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const courses = await prisma.courses.findMany({
+      where: { deleted_at: null },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        instructor_id: true,
+        cohort_id: true,
+        created_at: true,
+      },
+      orderBy: { created_at: "desc" },
+    });
+
+    return res.status(200).json({ success: true, data: courses });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getCourseContentForAI = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = String(req.params.id);
+
+    const course = await prisma.courses.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        instructor_id: true,
+        cohort_id: true,
+        created_at: true,
+      },
+    });
+
+    if (!course) {
+      return res.status(404).json({ success: false, message: "Course not found" });
+    }
+
+    const content = await prisma.course_content.findMany({
+      where: { course_id: id },
+      select: {
+        id: true,
+        course_id: true,
+        title: true,
+        content_type: true,
+        content_url: true,
+        text_body: true,
+        position: true,
+        created_at: true,
+      },
+      orderBy: { position: "asc" },
+    });
+
+    return res.status(200).json({ success: true, data: { course, content } });
+  } catch (err) {
+    next(err);
+  }
+};
+
 //Create Course by the Instructor
 export const createCourseInstructor = async (
   req: AuthRequest,
@@ -317,7 +389,7 @@ export const getAllEnrolledCourses = async (
       where: { user_id: userId },
     });
 
-    const fullName = student?.full_name;
+    const fullName = student?.bio || "Student";
 
     const courses = await prisma.enrollments.findMany({
       where: { user_id: userId },

@@ -66,7 +66,7 @@ export const syncStudent = async (
   next: NextFunction
 ) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
 
     const user = await prisma.users.findUnique({
       where: { id: userId },
@@ -102,7 +102,7 @@ export const syncStudent = async (
 };
 export const removeStudentFromAI = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params.userId as string;
 
     const user = await prisma.users.findUnique({
       where: { id: userId },

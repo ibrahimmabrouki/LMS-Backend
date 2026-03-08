@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwtUserPayload from "../utils/jwtUserPayload";
 import { prisma } from "../lib/prisma";
+import aiClient from "../config/aiClient";
 
 interface AuthRequest extends Request {
   user?: jwtUserPayload;
@@ -53,9 +54,42 @@ export const addContentByInstructor = async (
       },
     });
 
+    // ── Auto-ingest into Qdrant via AI service ───────────────────────────
+    // Priority:
+    //   1. Non-PDF URL  → /ai/ingest/link  (HTML scrape)
+    //   2. PDF URL      → /ai/ingest/course/:id (course-level ingester handles PDF extraction)
+    //   3. No URL       → /ai/ingest/course/:id (metadata / text_body fallback)
+    let aiResult: Record<string, unknown> = {};
+    try {
+      const urlStr = String(content_url ?? "").trim();
+      const isPdf = urlStr.toLowerCase().endsWith(".pdf");
+
+      if (urlStr && !isPdf) {
+        // Article / doc / video metadata — scrape HTML
+        const { data } = await aiClient.post("/ai/ingest/link", {
+          document_id: content.id,
+          title,
+          url: urlStr,
+          dataset_id: courseId,
+          user_id: instructorId,
+        });
+        aiResult = data;
+      } else {
+        // PDF URL or no URL — let the course-level ingester handle it
+        // (it fetches all content items and does proper PDF byte extraction)
+        const { data } = await aiClient.post(`/ai/ingest/course/${courseId}`);
+        aiResult = data;
+      }
+    } catch (aiErr: any) {
+      // AI failure must not block the content creation response
+      console.error("[AI Ingest Error]", aiErr?.response?.data ?? aiErr.message);
+      aiResult = { success: false, error: "AI ingest failed — content saved to DB" };
+    }
+
     return res.status(201).json({
       message: "Content added successfully",
       content,
+      ai_ingest: aiResult,
     });
   } catch (err) {
     next(err);
@@ -147,6 +181,14 @@ export const editCourseContentByInstructor = async (
       data: updateData,
     });
 
+    // ── Re-ingest updated content into Qdrant ────────────────────────────
+    // Re-ingest the whole course so the updated content replaces old vectors
+    try {
+      await aiClient.post(`/ai/ingest/course/${courseId}`);
+    } catch (aiErr: any) {
+      console.error("[AI Re-ingest Error]", aiErr?.response?.data ?? aiErr.message);
+    }
+
     return res.status(200).json({
       message: "Content updated successfully",
       content: updated,
@@ -183,6 +225,13 @@ export const deleteCourseContentByInstructor = async (
     await prisma.course_content.delete({
       where: { id: contentId },
     });
+
+    // ── Remove deleted content vectors from Qdrant ───────────────────────
+    try {
+      await aiClient.delete(`/ai/documents/${contentId}`);
+    } catch (aiErr: any) {
+      console.error("[AI Delete Error]", aiErr?.response?.data ?? aiErr.message);
+    }
 
     // After deletion, re-sequence the remaining items so positions stay clean
     // e.g. if positions were 1,2,3,4 and we deleted position 2,

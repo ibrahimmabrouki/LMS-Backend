@@ -1,10 +1,24 @@
-import {Router} from "express";
-import {createCourseInstructor, getAllCoursesByInstructor, updateInstructorCourseById, instructorGetCourseById, deleteCourseInstructor, /*student =>*/getAllEnrolledCourses} from "../controllers/courses.controllers"
+    import {Router} from "express";
+    import {
+        createCourseInstructor,
+        getAllCoursesByInstructor,
+        updateInstructorCourseById,
+        instructorGetCourseById,
+        deleteCourseInstructor,
+        getAllCoursesForAI,
+        getCourseContentForAI,
+        /*student =>*/getAllEnrolledCourses,
+    } from "../controllers/courses.controllers"
 
 import {authenticateToken, authorizeRoles} from "../middlewares/auth.middleware";
 
 const instructorCourseRouter = Router();
 const studentCourseRouter = Router();
+const publicCourseRouter = Router();
+
+// public routes used by the FastAPI AI service
+publicCourseRouter.get('/', getAllCoursesForAI);
+publicCourseRouter.get('/:id/content', getCourseContentForAI);
 
 //routes for apis to instructor to manipulate Courses
 instructorCourseRouter.post('/my-courses', authenticateToken, authorizeRoles("instructor"), createCourseInstructor);
@@ -19,4 +33,4 @@ studentCourseRouter.get('/my-courses', authenticateToken, authorizeRoles("studen
 
 
 
-export  {instructorCourseRouter, studentCourseRouter};
+export  {instructorCourseRouter, studentCourseRouter, publicCourseRouter};
