@@ -95,7 +95,7 @@ export const updateStudentProfile = async (
       updateData.bio = bio;
     }
     if (fullName !== undefined) {
-      updateData.name = fullName;
+      updateData.full_name = fullName;
     }
     if (linkedin_url !== undefined) {
       updateData.linkedin_url = linkedin_url;
@@ -386,7 +386,7 @@ export const updateInstructorProfile = async (
       updateData.bio = bio;
     }
     if (fullName !== undefined) {
-      updateData.name = fullName;
+      updateData.full_name = fullName;
     }
     /** 
     if (linkedin_url !== undefined) {
