@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -197,9 +198,28 @@ model users {
   courses             courses[]
   enrollments         enrollments[]
   feedback            feedback[]
+  notifications       notifications[]
   performance_summary performance_summary?
   profiles            profiles?
   submissions         submissions[]
   user_skills         user_skills[]
   user_vectors        user_vectors?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model notifications {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id         String    @db.Uuid
+  type            String    @db.VarChar
+  title           String    @db.VarChar
+  message         String?
+  is_read         Boolean?  @default(false)
+  reference_id    String?   @db.Uuid
+  reference_type  String?   @db.VarChar
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+  announcement_id String?   @db.Uuid
+  users           users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([user_id], map: "idx_notifications_user_id")
+  @@index([user_id, is_read], map: "idx_notifications_user_unread", where: raw("(is_read = false)"))
 }
