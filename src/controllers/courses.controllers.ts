@@ -460,7 +460,7 @@ export const getAllEnrolledCourses = async (
       where: { user_id: userId },
     });
 
-    const fullName = student?.bio || "Student";
+    const fullName = student?.full_name;
 
     const courses = await prisma.enrollments.findMany({
       where: { user_id: userId },
