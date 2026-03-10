@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwtUserPayload from "../utils/jwtUserPayload";
 import { prisma } from "../lib/prisma";
+import { v4 as uuidv4 } from "uuid";
 import { includes } from "zod";
 
 interface AuthRequest extends Request {
@@ -79,6 +80,37 @@ export const createAssignmentByIns = async (
         due_date: due_date ? new Date(due_date) : null,
         max_score: 100, // always defaulted to 100 as per requirement
       },
+    });
+
+    //getting all active students who are also found in the active cohort
+    const activeStudents = await prisma.users.findMany({
+      where: {
+        role: "student",
+        is_active: true,
+        created_at: { gte: activeCohort.start_date ?? new Date() },
+      },
+      select: { id: true },
+    });
+
+    if (activeStudents.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No active students found in the active cohort" });
+    }
+
+    //adding one notification row per student which is active
+    const announcementId = uuidv4();
+    await prisma.notifications.createMany({
+      data: activeStudents.map((student) => ({
+        user_id: student.id,
+        announcement_id: announcementId,
+        type: "assignment",
+        title: `${title} is new assignment`,
+        message: description,
+        is_read: false,
+        reference_type: "assignment",
+        reference_id: assignment.id,
+      })),
     });
 
     return res.status(201).json({
@@ -492,6 +524,7 @@ export const GetAllAssignments = async (
     if (enrollments.length === 0)
       return res.status(404).json({ message: "No enrollments found" });
 
+    // get courses for student
     const courses = await prisma.courses.findMany({
       where: { id: { in: enrollments.map((e) => e.course_id) } },
       select: { id: true, title: true },
@@ -499,10 +532,7 @@ export const GetAllAssignments = async (
 
     const courseMap = new Map(courses.map((c) => [c.id, c.title]));
 
-    const submissions = await prisma.submissions.findMany({
-      where: { student_id: userPayload.id },
-    });
-
+    // get assignments for student
     const assignments = await prisma.assignments.findMany({
       where: { course_id: { in: enrollments.map((e) => e.course_id) } },
     });
@@ -510,13 +540,42 @@ export const GetAllAssignments = async (
     if (assignments.length === 0)
       return res.status(404).json({ message: "No assignments found" });
 
+    // get submissions for student assignments
+    const submissions = await prisma.submissions.findMany({
+      where: { student_id: userPayload.id },
+    });
+
+    // get feedbacks for student submissions
+    const feedbacks = await prisma.feedback.findMany({
+      where: {
+        submission_id: { in: submissions.map((s) => s.id) },
+      },
+    });
+
+    // submissions and feedbacks mapping
+    const submissionMap = new Map(submissions.map((s) => [s.assignment_id, s]));
+    const feedbackMap = new Map(feedbacks.map((f) => [f.submission_id, f]));
+
     return res.status(200).json({
-      assignments: assignments.map((a) => ({
-        ...a,
-        course_title: courseMap.get(a.course_id!) ?? "Unknown Course",
-        submission_status: getSubmissionStatus(a.id, submissions),
-        due_status: getDueStatus(a.due_date),
-      })),
+      assignments: assignments.map((a) => {
+        const submission = submissionMap.get(a.id);
+        const feedback = submission ? feedbackMap.get(submission.id) : null;
+
+        return {
+          ...a,
+          course_title: courseMap.get(a.course_id!) ?? "Unknown Course",
+
+          submission_status: submission?.status ?? "pending",
+          due_status: getDueStatus(a.due_date),
+
+          // fetched from submissions
+          submission_url: submission?.submission_url ?? null,
+
+          // fetched from feedbacks
+          rating: feedback?.rating ?? null,
+          comment: feedback?.comment ?? null,
+        };
+      }),
     });
   } catch (err) {
     next(err);

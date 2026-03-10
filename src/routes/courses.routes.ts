@@ -1,5 +1,5 @@
 import {Router} from "express";
-import {createCourseInstructor, getAllCoursesByInstructor, updateInstructorCourseById, instructorGetCourseById, deleteCourseInstructor, numberOfStudentsPerCourse, countUngradedSubmissions, /*student =>*/getAllEnrolledCourses} from "../controllers/courses.controllers"
+import {createCourseInstructor, getAllCoursesByInstructor, updateInstructorCourseById, instructorGetCourseById, deleteCourseInstructor, numberOfStudentsPerCourse, countUngradedSubmissions, getStudentsByCourse, /*student =>*/getAllEnrolledCourses} from "../controllers/courses.controllers"
 
 import {authenticateToken, authorizeRoles} from "../middlewares/auth.middleware";
 
@@ -14,6 +14,9 @@ instructorCourseRouter.get('/my-courses/:courseId', authenticateToken, authorize
 instructorCourseRouter.delete('/my-courses/:courseId', authenticateToken, authorizeRoles("instructor"), deleteCourseInstructor);
 instructorCourseRouter.get('/:courseId/num-students', authenticateToken, authorizeRoles("instructor"), numberOfStudentsPerCourse);
 instructorCourseRouter.get('/:courseId/pending-subs', authenticateToken, authorizeRoles("instructor"), countUngradedSubmissions);
+//slim Route
+instructorCourseRouter.get('/:courseId', authenticateToken, authorizeRoles("instructor"), getStudentsByCourse);
+
 
 
 

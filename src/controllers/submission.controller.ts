@@ -7,6 +7,7 @@ interface AuthRequest extends Request {
 }
 
 //Getting all the submission for some assignment
+//Getting all the submission for some assignment
 export const GetAllSubmissionsByAssignment = async (
   req: AuthRequest,
   res: Response,
@@ -21,17 +22,20 @@ export const GetAllSubmissionsByAssignment = async (
     let { assignmentId } = req.params;
     assignmentId = Array.isArray(assignmentId) ? assignmentId[0] : assignmentId;
 
-    const assignment = await prisma.assignments.findUnique({
-      where: { id: assignmentId },
-    });
-
-    if (!assignment) {
-      return res.status(404).json({ message: "Assignment not found" });
-    }
-
-    //find the submissions
     const submissions = await prisma.submissions.findMany({
       where: { assignment_id: assignmentId },
+      include: {
+        assignments: {
+          include: {
+            courses: true,
+          },
+        },
+        users: {
+          include: {
+            profiles: true,
+          },
+        },
+      },
     });
 
     if (submissions.length === 0) {
@@ -40,15 +44,27 @@ export const GetAllSubmissionsByAssignment = async (
         .json({ message: "No submissions found for this assignment" });
     }
 
+    const formatted = submissions.map((sub) => ({
+      id: sub.id,
+      student_name: sub.users?.profiles?.full_name,
+      assignment_id: sub.assignment_id,
+      assignment_title: sub.assignments?.title,
+      course_id: sub.assignments?.course_id,
+      course_title: sub.assignments?.courses?.title,
+      submission_date: sub.submitted_at,
+      assignment_type: sub.assignments?.type,
+      submission_url: sub.submission_url,
+      score: sub.score,
+      status: sub.status,
+    }));
+
     return res.status(200).json({
-      assignment_title: assignment.title,
-      submissions,
+      submissions: formatted,
     });
   } catch (err) {
     next(err);
   }
 };
-
 //Student APIs for the Content
 //Get all enrolled Content
 
@@ -149,15 +165,14 @@ export const editSubmission = async (
 
     const { submission_url } = req.body;
 
-    const submission = await prisma.submissions.findUnique({
-      where: { id: assignmentId, 
-    student_id: userPayload.id },
+    const submission = await prisma.submissions.findFirst({
+      where: { assignment_id: assignmentId, student_id: userPayload.id },
     });
 
     if (!submission) {
-      return res
-        .status(404)
-        .json({ message: `There is no Submission related to assignment with id: ${assignmentId}` });
+      return res.status(404).json({
+        message: `There is no Submission related to assignment with id: ${assignmentId}`,
+      });
     }
 
     const status = submission.status;

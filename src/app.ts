@@ -7,6 +7,7 @@ import {instructorContentRouter, studentContentRouter} from "./routes/content.ro
 import {instructorAssignmentRouter, studentAssignmentRouter} from "./routes/assignment.routes";
 import {instructorSubmissionRouter, studentSbmissionRouter} from "./routes/submission.routes";
 import {InstructorFeedbackRouter, StudentFeedbackRouter} from "./routes/feedback.routes";
+import {instructorNotificationRouter, studentNotificationRouter} from "./routes/notification.routes";
 import errorHandler from "./middlewares/error.middleware";
 
 
@@ -37,9 +38,13 @@ app.use('/api/student/courses/assignment', studentAssignmentRouter);
 app.use('/api/instructor/courses/submissions', instructorSubmissionRouter);
 app.use('/api/student/courses/submissions', studentSbmissionRouter);
 
-//routes for feedbask
+//routes for feedback
 app.use('/api/instructor/feedback', InstructorFeedbackRouter);
 app.use('/api/student/feedback', StudentFeedbackRouter);
+
+//routes for notification
+app.use('/api/instructor/notification', instructorNotificationRouter);
+app.use('/api/student/notification', studentNotificationRouter);
 
 
 app.use(errorHandler);
