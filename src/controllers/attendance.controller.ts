@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 import asyncHandler from "../lib/asyncHandler";
 import jwtUserPayload from "../utils/jwtUserPayload";
@@ -70,7 +70,7 @@ export const createSession = asyncHandler(
       message: "Attendance session created",
       session,
     });
-  },
+  }
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ export const submitAttendance = asyncHandler(
         update: {
           status: r.status,
         },
-      }),
+      })
     );
 
     const saved = await prisma.$transaction(upserts);
@@ -146,7 +146,7 @@ export const submitAttendance = asyncHandler(
       saved_count: saved.length,
       session_id: sessionId,
     });
-  },
+  }
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -201,7 +201,7 @@ export const getCourseSessions = asyncHandler(
     }));
 
     res.status(200).json({ course_id: courseId, sessions: result });
-  },
+  }
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -242,7 +242,7 @@ export const getCourseRoster = asyncHandler(
     }));
 
     res.status(200).json({ course_id: courseId, roster });
-  },
+  }
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -321,7 +321,7 @@ export const getMyAttendance = asyncHandler(
     }));
 
     res.status(200).json({ student_id: studentId, attendance });
-  },
+  }
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -373,5 +373,72 @@ export const getSessionDetail = asyncHandler(
         status: r.status,
       })),
     });
-  },
+  }
 );
+
+export const getAllStudents = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const today = new Date();
+
+    const activeCohort = await prisma.cohorts.findFirst({
+      where: {
+        start_date: { lte: today },
+        end_date: { gte: today },
+      },
+    });
+
+    if (!activeCohort) {
+      return res.status(400).json({ message: "No active cohort found" });
+    }
+
+    console.log(activeCohort);
+    const firstCourse = await prisma.courses.findFirst({
+      where: { cohort_id: activeCohort.id },
+    });
+
+    if (!firstCourse) {
+      return res
+        .status(404)
+        .json({ message: "No Courses in the Active Cohort" });
+    }
+
+    const enrollments = await prisma.enrollments.findMany({
+      where: { course_id: firstCourse.id },
+      select: {
+        user_id: true,
+      },
+    });
+
+    const studentIds = enrollments.map((e) => e.user_id);
+
+    const students = await prisma.users.findMany({
+      where: {
+        id: { in: studentIds },
+      },
+      select: {
+        id: true,
+        email: true,
+        profiles: {
+          select: {
+            full_name: true,
+          },
+        },
+      },
+    });
+    
+    const formattedStudents = students.map((student) => ({
+      id: student.id,
+      email: student.email,
+      full_name: student.profiles?.full_name,
+    }));
+    
+   return  res.status(200).json(formattedStudents);
+
+  } catch (err) {
+    next(err);
+  }
+};

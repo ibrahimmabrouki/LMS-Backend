@@ -70,11 +70,7 @@ export const saveFeedbackAsDraft = async (
       Data.rating = rating;
     }
 
-    //to be updated
-    if (existingFeedback) {
-      const prevComment = existingFeedback?.comment;
-      Data.comment = prevComment + comment;
-    } else {
+    if (comment !== undefined) {
       Data.comment = comment;
     }
 
@@ -187,10 +183,7 @@ export const submitFeedback = async (
       Data.rating = rating;
     }
 
-    if (existingFeedback) {
-      const prevComment = existingFeedback?.comment;
-      Data.comment = prevComment + comment;
-    } else {
+    if (comment !== undefined) {
       Data.comment = comment;
     }
 
@@ -211,6 +204,14 @@ export const submitFeedback = async (
 
     const assigmentTitle = submission.assignments.title;
     const studentId = submission.student_id;
+
+    //upon submitting the feedback updating the value of teh status to graded in the submission table
+    await prisma.submissions.update({
+      where: { id: submissionId },
+      data: {
+        status: "graded"
+      }
+    });
 
     //adding one notification row per student which is active
     const announcementId = uuidv4();

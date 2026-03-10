@@ -6,6 +6,7 @@ import {
   getCourseRoster,
   getMyAttendance,
   getSessionDetail,
+  getAllStudents,
 } from "../controllers/attendance.controller";
 import {
   authenticateToken,
@@ -30,7 +31,7 @@ attendanceRouter.post("/sessions", authorizeRoles("instructor"), createSession);
 attendanceRouter.post(
   "/sessions/:sessionId/records",
   authorizeRoles("instructor"),
-  submitAttendance,
+  submitAttendance
 );
 
 //  this apis is for getting all attendance sessions and records for one course
@@ -38,7 +39,7 @@ attendanceRouter.post(
 attendanceRouter.get(
   "/courses/:courseId/sessions",
   authorizeRoles("instructor"),
-  getCourseSessions,
+  getCourseSessions
 );
 
 //  this apis is for getting the course roster before taking attendance
@@ -46,7 +47,7 @@ attendanceRouter.get(
 attendanceRouter.get(
   "/courses/:courseId/roster",
   authorizeRoles("instructor"),
-  getCourseRoster,
+  getCourseRoster
 );
 
 //  this apis is for getting full details of one attendance session
@@ -54,7 +55,13 @@ attendanceRouter.get(
 attendanceRouter.get(
   "/sessions/:sessionId",
   authorizeRoles("instructor"),
-  getSessionDetail,
+  getSessionDetail
+);
+
+attendanceRouter.get(
+  "/view-students",
+  authorizeRoles("instructor"),
+  getAllStudents
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
