@@ -9,6 +9,7 @@ import {
   getCourseContentForAI,
   numberOfStudentsPerCourse,
   countUngradedSubmissions,
+  getStudentsByCourse,
   /*student =>*/ getAllEnrolledCourses,
 } from "../controllers/courses.controllers";
 
@@ -67,6 +68,14 @@ instructorCourseRouter.get(
   authenticateToken,
   authorizeRoles("instructor"),
   countUngradedSubmissions,
+);
+
+// moody this apis is for getting all students enrolled in a specific course
+instructorCourseRouter.get(
+  "/:courseId/students",
+  authenticateToken,
+  authorizeRoles("instructor"),
+  getStudentsByCourse,
 );
 
 //routes for apis to Student to View Courses

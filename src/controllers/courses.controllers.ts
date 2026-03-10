@@ -495,6 +495,84 @@ export const getAllEnrolledCourses = async (
   }
 };
 
+// ── Get all students enrolled in a specific course (instructor only) ──────────
+
+export const getStudentsByCourse = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userPayload = req.user as jwtUserPayload;
+    if (!userPayload) return res.status(401).json({ message: "Unauthorized" });
+
+    let { courseId } = req.params;
+    courseId = Array.isArray(courseId) ? courseId[0] : courseId;
+
+    // Verify the course exists and belongs to this instructor
+    const course = await prisma.courses.findUnique({
+      where: { id: courseId },
+      select: { id: true, title: true, instructor_id: true },
+    });
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    if (course.instructor_id !== userPayload.id) {
+      return res
+        .status(403)
+        .json({ message: "You do not own this course" });
+    }
+
+    // Fetch all enrolled students with their profile info
+    const enrollments = await prisma.enrollments.findMany({
+      where: { course_id: courseId },
+      include: {
+        users: {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            profiles: {
+              select: {
+                full_name: true,
+                bio: true,
+                linkedin_url: true,
+                github_url: true,
+                portfolio_url: true,
+                cv_url: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const students = enrollments.map((e) => ({
+      user_id: e.user_id,
+      enrolled_at: e.enrolled_at,
+      email: e.users?.email,
+      username: e.users?.username,
+      full_name: e.users?.profiles?.full_name,
+      bio: e.users?.profiles?.bio,
+      linkedin_url: e.users?.profiles?.linkedin_url,
+      github_url: e.users?.profiles?.github_url,
+      portfolio_url: e.users?.profiles?.portfolio_url,
+      cv_url: e.users?.profiles?.cv_url,
+    }));
+
+    return res.status(200).json({
+      course_id: courseId,
+      course_title: course.title,
+      student_count: students.length,
+      students,
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
 /**export const deleteSkillByUser = async (
     req : AuthRequest,
     res : Response,
