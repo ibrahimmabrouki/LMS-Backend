@@ -5,16 +5,14 @@ import {authenticateToken, authorizeRoles} from "../middlewares/auth.middleware"
 const userSkillsRouter  = Router();
 
 userSkillsRouter.get('/getAllSkills', getAllSkills);
-userSkillsRouter.put('/addSkillByUser', authenticateToken, authorizeRoles('instructor'), AddSkillByUser);
-userSkillsRouter.delete('/deleteUserSkills', authenticateToken, authorizeRoles('instructor'), deleteSkillByUser);
-userSkillsRouter.get('/getUserSkills', authenticateToken, authorizeRoles('instructor'), getUserSkills);
-userSkillsRouter.get("/findSkill", authenticateToken, authorizeRoles('instructor'), findSkill);
+userSkillsRouter.put('/addSkillByUser', authenticateToken, authorizeRoles('student'), AddSkillByUser);
+userSkillsRouter.delete('/deleteUserSkills', authenticateToken, authorizeRoles('student'), deleteSkillByUser);
+userSkillsRouter.get('/getUserSkills', authenticateToken, authorizeRoles('student'), getUserSkills);
+userSkillsRouter.get("/findSkill", authenticateToken, authorizeRoles('student'), findSkill);
 
-//For the Admin
-userSkillsRouter.post("/addSkillGlobaly", authenticateToken, authorizeRoles('admin'), addSkillGlobaly);
-userSkillsRouter.delete("/deleteSkillGlobaly", authenticateToken, authorizeRoles('admin'), deleteSkillGlobaly);
-
-
+//For the Admin and instructor 
+userSkillsRouter.post("/addSkillGlobaly", authenticateToken, authorizeRoles("admin", "instructor"), addSkillGlobaly);
+userSkillsRouter.delete("/deleteSkillGlobaly", authenticateToken, authorizeRoles("admin", "instructor"), deleteSkillGlobaly);
 
 
 export default userSkillsRouter;

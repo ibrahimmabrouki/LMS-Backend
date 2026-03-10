@@ -1,34 +1,18 @@
 import express from "express";
 import authRouter from "./routes/auth.routes";
 import userSkillsRouter from "./routes/user.skills.routes";
-import {
-  StudentProfileRouter,
-  InstructorProfileRouter,
-} from "./routes/user.profile.router";
-import {
-  instructorCourseRouter,
-  studentCourseRouter,
-  publicCourseRouter,
-} from "./routes/courses.routes";
-import {
-  instructorContentRouter,
-  studentContentRouter,
-} from "./routes/content.routes";
-import {
-  instructorAssignmentRouter,
-  studentAssignmentRouter,
-} from "./routes/assignment.routes";
-import {
-  instructorSubmissionRouter,
-  studentSbmissionRouter,
-} from "./routes/submission.routes";
-import {
-  InstructorFeedbackRouter,
-  StudentFeedbackRouter,
-} from "./routes/feedback.routes";
+import { StudentProfileRouter, InstructorProfileRouter } from "./routes/user.profile.router";
+import { instructorCourseRouter, studentCourseRouter,
+  publicCourseRouter} from "./routes/courses.routes";
+import {instructorContentRouter, studentContentRouter} from "./routes/content.routes"
+import {instructorAssignmentRouter, studentAssignmentRouter} from "./routes/assignment.routes";
+import {instructorSubmissionRouter, studentSbmissionRouter} from "./routes/submission.routes";
+import {InstructorFeedbackRouter, StudentFeedbackRouter} from "./routes/feedback.routes";
+import {instructorNotificationRouter, studentNotificationRouter} from "./routes/notification.routes";
 import attendanceRouter from "./routes/attendance.routes";
 import aiRouter from "./routes/ai.routes";
 import adminRouter from "./routes/admin.routes";
+
 import errorHandler from "./middlewares/error.middleware";
 
 const app = express();
@@ -73,13 +57,17 @@ app.use("/attendance", attendanceRouter);
 // ── Courses (public AI ingest proxy — GET /courses and /courses/:id/content) ──
 app.use("/courses", publicCourseRouter);
 
+//routes for feedbask
+app.use('/api/instructor/feedback', InstructorFeedbackRouter);
+app.use('/api/student/feedback', StudentFeedbackRouter);
+//routes for notification
+app.use('/api/instructor/notification', instructorNotificationRouter);
+app.use('/api/student/notification', studentNotificationRouter);
 // ── AI routes (search/ask/sync) ───────────────────────────────────────────────
 app.use("/api/ai", aiRouter);
 app.use("/ai", aiRouter);
-
 // ── Admin routes ──────────────────────────────────────────────────────────────
 app.use("/api/admin", adminRouter);
-
 app.use(errorHandler);
 
 export default app;

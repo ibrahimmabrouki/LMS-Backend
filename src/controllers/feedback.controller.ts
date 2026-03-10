@@ -1,6 +1,7 @@
 import { Response, Request, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 import jwtUserPayload from "../utils/jwtUserPayload";
+import { v4 as uuidv4 } from "uuid";
 
 interface AuthRequest extends Request {
   user?: jwtUserPayload;
@@ -69,9 +70,12 @@ export const saveFeedbackAsDraft = async (
       Data.rating = rating;
     }
 
-    const prevComment = existingFeedback?.comment;
-    if (comment !== undefined) {
+    //to be updated
+    if (existingFeedback) {
+      const prevComment = existingFeedback?.comment;
       Data.comment = prevComment + comment;
+    } else {
+      Data.comment = comment;
     }
 
     const feedback = await prisma.feedback.upsert({
@@ -183,10 +187,14 @@ export const submitFeedback = async (
       Data.rating = rating;
     }
 
-    const prevComment = existingFeedback?.comment;
-    if (comment !== undefined) {
+    if (existingFeedback) {
+      const prevComment = existingFeedback?.comment;
       Data.comment = prevComment + comment;
+    } else {
+      Data.comment = comment;
     }
+
+    Data.is_locked = true;
 
     const feedback = await prisma.feedback.upsert({
       where: {
@@ -196,8 +204,26 @@ export const submitFeedback = async (
       create: {
         submission_id: submissionId,
         instructor_id: userPayload.id,
-        is_locked: false,
+        is_locked: true,
         ...Data,
+      },
+    });
+
+    const assigmentTitle = submission.assignments.title;
+    const studentId = submission.student_id;
+
+    //adding one notification row per student which is active
+    const announcementId = uuidv4();
+    await prisma.notifications.create({
+      data: {
+        user_id: studentId!,
+        announcement_id: announcementId,
+        type: "feedback",
+        title: "Feedback",
+        message: `Feedback on assignment ${assigmentTitle}`,
+        is_read: false,
+        reference_type: "feedback",
+        reference_id: feedback.id,
       },
     });
 
@@ -257,4 +283,3 @@ export const viewFeedbackByStudent = async (
     next(err);
   }
 };
-

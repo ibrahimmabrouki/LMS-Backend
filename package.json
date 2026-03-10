@@ -15,6 +15,7 @@
     "multer": "^2.1.0",
     "pdf-parse-new": "^2.0.0",
     "pg": "^8.18.0",
+    "uuid": "^13.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -23,6 +24,7 @@
     "@types/node": "^25.3.0",
     "@types/pdf-parse": "^1.1.5",
     "@types/pg": "^8.16.0",
+    "@types/uuid": "^10.0.0",
     "nodemon": "^3.1.13",
     "prisma": "^7.4.1",
     "ts-node": "^10.9.2",

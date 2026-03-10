@@ -5,10 +5,11 @@ import {
   updateInstructorCourseById,
   instructorGetCourseById,
   deleteCourseInstructor,
-  getAllCoursesForAI,
+   getAllCoursesForAI,
   getCourseContentForAI,
   numberOfStudentsPerCourse,
   countUngradedSubmissions,
+  getStudentsByCourse,
   /*student =>*/ getAllEnrolledCourses,
 } from "../controllers/courses.controllers";
 
@@ -30,43 +31,50 @@ instructorCourseRouter.post(
   "/my-courses",
   authenticateToken,
   authorizeRoles("instructor"),
-  createCourseInstructor,
+  createCourseInstructor
 );
 instructorCourseRouter.get(
   "/my-courses",
   authenticateToken,
   authorizeRoles("instructor"),
-  getAllCoursesByInstructor,
+  getAllCoursesByInstructor
 );
 instructorCourseRouter.patch(
   "/my-courses/:courseId",
   authenticateToken,
   authorizeRoles("instructor"),
-  updateInstructorCourseById,
+  updateInstructorCourseById
 );
 instructorCourseRouter.get(
   "/my-courses/:courseId",
   authenticateToken,
   authorizeRoles("instructor"),
-  instructorGetCourseById,
+  instructorGetCourseById
 );
 instructorCourseRouter.delete(
   "/my-courses/:courseId",
   authenticateToken,
   authorizeRoles("instructor"),
-  deleteCourseInstructor,
+  deleteCourseInstructor
 );
 instructorCourseRouter.get(
   "/:courseId/num-students",
   authenticateToken,
   authorizeRoles("instructor"),
-  numberOfStudentsPerCourse,
+  numberOfStudentsPerCourse
 );
 instructorCourseRouter.get(
   "/:courseId/pending-subs",
   authenticateToken,
   authorizeRoles("instructor"),
-  countUngradedSubmissions,
+  countUngradedSubmissions
+);
+//slim Route
+instructorCourseRouter.get(
+  "/:courseId",
+  authenticateToken,
+  authorizeRoles("instructor"),
+  getStudentsByCourse
 );
 
 //routes for apis to Student to View Courses
@@ -74,7 +82,7 @@ studentCourseRouter.get(
   "/my-courses",
   authenticateToken,
   authorizeRoles("student"),
-  getAllEnrolledCourses,
+  getAllEnrolledCourses
 );
 
 export { instructorCourseRouter, studentCourseRouter, publicCourseRouter };
