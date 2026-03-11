@@ -11,7 +11,7 @@ interface AuthRequest extends Request {
 export const getAllCoursesForAI = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const courses = await prisma.courses.findMany({
@@ -36,7 +36,7 @@ export const getAllCoursesForAI = async (
 export const getCourseContentForAI = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const id = String(req.params.id);
@@ -84,7 +84,7 @@ export const getCourseContentForAI = async (
 export const createCourseInstructor = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const userPayload = req.user as jwtUserPayload;
@@ -152,7 +152,7 @@ export const createCourseInstructor = async (
 export const getAllCoursesByInstructor = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const userPayload = req.user as jwtUserPayload;
@@ -198,7 +198,7 @@ export const getAllCoursesByInstructor = async (
 export const updateInstructorCourseById = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const userPayload = req.user as jwtUserPayload;
@@ -258,7 +258,7 @@ export const updateInstructorCourseById = async (
 export const instructorGetCourseById = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const userPayload = req.user as jwtUserPayload;
@@ -293,7 +293,7 @@ export const instructorGetCourseById = async (
 export const deleteCourseInstructor = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const userPayload = req.user as jwtUserPayload;
@@ -509,7 +509,7 @@ export const getAllEnrolledCourses = async (
 
 // ── Get all students enrolled in a specific course (instructor only) ──────────
 
-export const getStudentsByCourse = async (
+export const getStudentsByInsructor = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
@@ -518,40 +518,46 @@ export const getStudentsByCourse = async (
     const userPayload = req.user as jwtUserPayload;
     if (!userPayload) return res.status(401).json({ message: "Unauthorized" });
 
-    let { courseId } = req.params;
-    courseId = Array.isArray(courseId) ? courseId[0] : courseId;
+    const instructorId = userPayload.id;
 
-    // Verify the course exists and belongs to this instructor
-    const course = await prisma.courses.findUnique({
-      where: { id: courseId },
-      select: { id: true, title: true, instructor_id: true },
+    const courses = await prisma.courses.findMany({
+      where: { instructor_id: instructorId },
+      select: { id: true },
     });
 
-    if (!course) {
-      return res.status(404).json({ message: "Course not found" });
-    }
+    const courseIds = courses.map((c) => c.id);
 
-    if (course.instructor_id !== userPayload.id) {
-      return res.status(403).json({ message: "You do not own this course" });
-    }
+    const studentIds = await prisma.enrollments.findMany({
+      where: { course_id: { in: courseIds } },
+      select: { user_id: true },
+      distinct: ["user_id"],
+    });
 
-    // Fetch all enrolled students with their profile info
-    const enrollments = await prisma.enrollments.findMany({
-      where: { course_id: courseId },
-      include: {
-        users: {
+    const ids = studentIds.map((s) => s.user_id);
+
+    const studentsData = await prisma.users.findMany({
+      where: {
+        id: { in: ids },
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        profiles: {
           select: {
-            id: true,
-            email: true,
-            username: true,
-            profiles: {
+            full_name: true,
+            bio: true,
+            linkedin_url: true,
+            github_url: true,
+            portfolio_url: true,
+            cv_url: true,
+          },
+        },
+        user_skills: {
+          select: {
+            skills: {
               select: {
-                full_name: true,
-                bio: true,
-                linkedin_url: true,
-                github_url: true,
-                portfolio_url: true,
-                cv_url: true,
+                name: true,
               },
             },
           },
@@ -559,26 +565,42 @@ export const getStudentsByCourse = async (
       },
     });
 
-    const students = enrollments.map((e) => ({
-      user_id: e.user_id,
-      enrolled_at: e.enrolled_at,
-      email: e.users?.email,
-      username: e.users?.username,
-      full_name: e.users?.profiles?.full_name,
-      bio: e.users?.profiles?.bio,
-      linkedin_url: e.users?.profiles?.linkedin_url,
-      github_url: e.users?.profiles?.github_url,
-      portfolio_url: e.users?.profiles?.portfolio_url,
-      cv_url: e.users?.profiles?.cv_url,
+    const today = new Date();
+
+    const activeCohort = await prisma.cohorts.findFirst({
+      where: {
+        start_date: { lte: today },
+        end_date: { gte: today },
+      },
+    });
+
+    if (!activeCohort) {
+      return res.status(400).json({ message: "No active cohort found" });
+    }
+
+    const coursesTitles = await prisma.courses.findMany({
+      where: { cohort_id: activeCohort.id },
+      select: { title: true },
+    });
+
+    const formattedStudents = studentsData.map((student) => ({
+      id: student.id,
+      username: student.username,
+      email: student.email,
+      full_name: student.profiles?.full_name,
+      bio: student.profiles?.bio,
+      linkedin_url: student.profiles?.linkedin_url,
+      github_url: student.profiles?.github_url,
+      portfolio_url: student.profiles?.portfolio_url,
+      cv_url: student.profiles?.cv_url,
+      skills: student.user_skills.map((s) => s.skills.name),
     }));
 
-    return res.status(200).json({
-      course_id: courseId,
-      course_title: course.title,
-      student_count: students.length,
-      students,
-    });
-  } catch (err) {
-    return next(err);
-  }
+    return res
+      .status(200)
+      .json({
+        coursesTitles: coursesTitles,
+        formattedStudents: formattedStudents,
+      });
+  } catch (err) {}
 };

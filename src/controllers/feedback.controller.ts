@@ -204,12 +204,16 @@ export const submitFeedback = async (
 
     const assigmentTitle = submission.assignments.title;
     const studentId = submission.student_id;
+    const graded_at = new Data();
+    const score = rating *20;
 
     //upon submitting the feedback updating the value of teh status to graded in the submission table
     await prisma.submissions.update({
       where: { id: submissionId },
       data: {
-        status: "graded"
+        status: "graded",
+        graded_at: graded_at, 
+        score: score
       }
     });
 

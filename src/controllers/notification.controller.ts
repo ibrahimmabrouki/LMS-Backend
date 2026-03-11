@@ -71,6 +71,7 @@ export const createAnnouncement = async (
 
     return res.status(201).json({
       message: `Announcement sent to ${activeStudents.length} students`,
+      announcement_id: announcementId
     });
 
   } catch (err) {

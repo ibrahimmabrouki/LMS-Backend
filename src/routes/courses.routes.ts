@@ -9,7 +9,7 @@ import {
   getCourseContentForAI,
   numberOfStudentsPerCourse,
   countUngradedSubmissions,
-  getStudentsByCourse,
+  getStudentsByInsructor,
   /*student =>*/ getAllEnrolledCourses,
 } from "../controllers/courses.controllers";
 
@@ -71,10 +71,10 @@ instructorCourseRouter.get(
 );
 //slim Route
 instructorCourseRouter.get(
-  "/:courseId",
+  "/students",
   authenticateToken,
   authorizeRoles("instructor"),
-  getStudentsByCourse
+  getStudentsByInsructor
 );
 
 //routes for apis to Student to View Courses
