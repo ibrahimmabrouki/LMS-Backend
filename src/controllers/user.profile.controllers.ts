@@ -75,6 +75,7 @@ export const getStudentOwnProfileData = async (
     }
 
     return res.status(200).json({
+      id: userId,
       email: profile.users?.email,
       username: profile.users?.username,
       full_name: profile.full_name,
